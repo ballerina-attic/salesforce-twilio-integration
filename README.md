@@ -9,11 +9,10 @@
 > This guide walks you through a typical cross-platform integration, which uses Ballerina to send customized SMS messages via Twilio, to a set of leads that are taken from Salesforce.
 
 ### Available Sections:
-- [What you'll build](#what-you-build)
+- [What you'll build](#what-youll-build)
 - [Prerequisites](#pre-req)
 - [Implementation](#development)
 - [Testing](#testing)
-- [Deployment](#deploying-the-scenario)
 
 #### What you'll build
 

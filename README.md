@@ -10,8 +10,8 @@
 
 ### Available Sections:
 - [What you'll build](#what-youll-build)
-- [Prerequisites](#pre-req)
-- [Implementation](#development)
+- [Prerequisites](#prerequisites)
+- [Implementation](#implementation)
 - [Testing](#testing)
 
 #### What you'll build

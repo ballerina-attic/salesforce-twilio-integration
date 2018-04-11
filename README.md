@@ -21,8 +21,6 @@ To understand how you can use Twilio for sending messages, let's consider a real
 In this particular use case Salesforce gives the relational contact details of the seleted Leads and Twilio is used to contact them via SMS to send promotional messages for the respective user group. This will represent a typical cross-platform integration that a marketing or promotion manager might require.
 
 You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers and Ballerina Twilio connector to send SMS to those relevant phone numbers.
-
-<image>
   
 #### Prerequisites
 
@@ -31,7 +29,7 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 * [Salesforce Connector](https://github.com/wso2-ballerina/package-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/package-twilio) will be downloaded from `ballerinacentral` when running the Ballerina file.
 
 #### Implementation
-Let's consider `integration.bal` for example. Let's first see how to add the Salesforce configurations, which requires OAuth2 configurations and Twilio configurations for the application written in Ballerina language.
+Let's consider `integration.bal` for example. Let's first see how to add the Salesforce configurations, which require OAuth2 configurations and Twilio configurations for the application written in Ballerina language.
 
 ##### Setup OAuth2 configurations (for Salesforce Connector)
 Create a Salesforce account and create a connected app by visiting [Salesforce](https://www.salesforce.com) and obtain the following parameters:
@@ -73,15 +71,15 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 
 * Set Twilio credentials in `ballerina.conf` (Required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, `TWILIO_MESSAGE`). `twilio-client.bal` file shows how to create the Salesforce Client endpoint.
 
-`
+```ballerina
 endpoint twilio:Client twilioClient {
     accountSid:getConfVar(TWILIO_ACCOUNT_SID),
     authToken:getConfVar(TWILIO_AUTH_TOKEN),
     clientConfig:{}
 };
-`
+```
   
-IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
+* IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
 #### Testing
 
@@ -110,7 +108,7 @@ function main(string[] args) {
 ```
 
 * You will receive SMS for the relevant numbers as the result.
-##### Result SMS
+##### Sample Result SMS
 ```
 Hi Carmen
 

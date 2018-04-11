@@ -49,7 +49,8 @@ Visit [here](https://help.salesforce.com/articleView?id=remoteaccess_authenticat
 
 * Set Twilio credentials in `ballerina.conf` (Required parameters are `SF_URL` and `SF_ACCESS_TOKEN`). `sdfc-client.bal` file shows how to create the Salesforce Client endpoint.
 
-`
+```ballerina
+
 endpoint sf:Client salesforceClient {
     oauth2Config:{
         accessToken:getConfVar(SF_ACCESS_TOKEN),
@@ -62,7 +63,8 @@ endpoint sf:Client salesforceClient {
         clientConfig:{}
     }
 };
-`
+
+```
 
 ##### Setup Twilio configurations
 Create a [Twilio](https://www.twilio.com/) account and obtain the following parameters:
@@ -86,7 +88,7 @@ IMPORTANT: These access tokens and refresh tokens can be used to make API reques
 
 Run `integration.bal` file using following command `ballerina run src` to excute the main function.
 
-`
+```ballerina
 function main(string[] args) {
 
     map m = getLeadsData();
@@ -106,14 +108,15 @@ function main(string[] args) {
         }
     }
 }
-`
+```
 
 * You will receive SMS for the relevant numbers as the result.
 ##### Result SMS
-`
+```
 Hi Carmen
+
 This is a sample SMS from Ballerina Twilio Connector.
-`
+```
 
 
 

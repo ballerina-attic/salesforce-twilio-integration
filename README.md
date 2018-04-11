@@ -14,7 +14,7 @@
 - [Implementation](#implementation)
 - [Testing](#testing)
 
-### What you'll build
+## What you'll build
 
 To understand how you can use Twilio for sending messages, let's consider a real-world use case of service promotional SMS sending system. 
 
@@ -22,13 +22,13 @@ In this particular use case Salesforce gives the relational contact details of t
 
 You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers and Ballerina Twilio connector to send SMS to those relevant phone numbers.
   
-### Prerequisites
+## Prerequisites
 
 * [Ballerina Distribution](https://github.com/ballerina-platform/ballerina-lang/blob/master/docs/quick-tour.md)
 * A Text Editor or an IDE
 * [Salesforce Connector](https://github.com/wso2-ballerina/package-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/package-twilio) will be downloaded from `ballerinacentral` when running the Ballerina file.
 
-### Implementation
+## Implementation
 Let's consider `integration.bal` for example. Let's first see how to add the Salesforce configurations, which require OAuth2 configurations and Twilio configurations for the application written in Ballerina language.
 
 #### Setup OAuth2 configurations (for Salesforce Connector)
@@ -82,7 +82,7 @@ endpoint twilio:Client twilioClient {
   
 * IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
-### Testing
+## Testing
 
 Run `integration.bal` file using following command `ballerina run src` to excute the main function.
 

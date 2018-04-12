@@ -16,6 +16,7 @@
 
 // Symbols
 @final string EMPTY_STRING = "";
+@final string NEW_LINE_CHARACTER = "\n";
 
 // Conf parameter keys for Twilio
 @final string TWILIO_ACCOUNT_SID = "TWILIO_ACCOUNT_SID";

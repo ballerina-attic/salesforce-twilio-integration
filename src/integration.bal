@@ -20,7 +20,9 @@ import wso2/sfdc37 as sf;
 import wso2/twilio;
 import ballerina/config;
 
-//sf
+documentation{
+    Represents Salesforce client endpoint.
+}
 endpoint sf:Client salesforceClient {
     oauth2Config:{
         accessToken:getConfVar(SF_ACCESS_TOKEN),
@@ -34,14 +36,18 @@ endpoint sf:Client salesforceClient {
     }
 };
 
-//twilio
+documentation{
+    Represents Twilio client endpoint.
+}
 endpoint twilio:Client twilioClient {
     accountSid:getConfVar(TWILIO_ACCOUNT_SID),
     authToken:getConfVar(TWILIO_AUTH_TOKEN),
     clientConfig:{}
 };
 
-//main
+documentation{
+    Main function to run the integration system
+}
 function main(string[] args) {
 
     map leadsDataMap = getLeadsData();
@@ -62,8 +68,10 @@ function main(string[] args) {
     }
 }
 
-//get leads
-function getLeadsData() returns map{
+documentation { Returns a map consists of Lead's data
+    R{{}} map consists of Lead data, phone as key, name as value
+}
+function getLeadsData() returns map {
     map leadsMap;
     log:printInfo("salesforceClient -> getQueryResult()");
     string sampleQuery = "SELECT name, phone FROM Lead";
@@ -72,8 +80,8 @@ function getLeadsData() returns map{
         json jsonRes => {
             json[] records = check < json[]>jsonRes.records;
             foreach record in records{
-                string key = record.Phone.toString() but {() => ""};
-                string value = record.Name.toString() but {() => ""};
+                string key = record.Phone.toString() but { () => "" };
+                string value = record.Name.toString() but { () => "" };
                 leadsMap[key] = value;
             }
 
@@ -98,12 +106,19 @@ function getLeadsData() returns map{
     return leadsMap;
 }
 
-//utility func
+documentation { Returns the string value for config parameters
+    P{{varName}} config variable name
+    R{{}} string value
+}
 function getConfVar(string varName) returns string {
     return config:getAsString(varName) but { () => EMPTY_STRING };
 }
 
-//send msg from twilio
+documentation { Utility function to send SMS
+    P{{fromMobile}} from mobile number
+    P{{toMobile}} to mobile number
+    P{{message}} sending message
+}
 function sendTextMessage(string fromMobile, string toMobile, string message) {
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {

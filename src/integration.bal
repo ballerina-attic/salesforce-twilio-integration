@@ -49,7 +49,9 @@ documentation{
 }
 function main(string[] args) {
 
-    map leadsDataMap = getLeadsData();
+    string sampleQuery = "SELECT name, phone FROM Lead";
+
+    map leadsDataMap = getLeadsData(sampleQuery);
     string message = getConfVar(TWILIO_MESSAGE);
     string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
 
@@ -71,11 +73,11 @@ function main(string[] args) {
 documentation { Returns a map consists of Lead's data
     R{{}} map consists of Lead data, phone as key, name as value
 }
-function getLeadsData() returns map {
+function getLeadsData(string leadQuery) returns map {
     map leadsMap;
     log:printInfo("Salesforce Connector -> Getting query results...");
-    string sampleQuery = "SELECT name, phone FROM Lead";
-    json|sf:SalesforceConnectorError response = salesforceClient -> getQueryResult(sampleQuery);
+
+    json|sf:SalesforceConnectorError response = salesforceClient -> getQueryResult(leadQuery);
     match response {
         json jsonRes => {
             json[] records = check < json[]>jsonRes.records;

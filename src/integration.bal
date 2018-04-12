@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.package sample;
 
-import ballerina/io;
 import ballerina/log;
 import wso2/sfdc37 as sf;
 import wso2/twilio;
@@ -54,6 +53,7 @@ function main(string[] args) {
     string message = getConfVar(TWILIO_MESSAGE);
     string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
 
+    log:printInfo("Twilio Connector => Sending messages...");
     foreach k, v in leadsDataMap {
         string|error result = <string>v;
         match result {
@@ -63,7 +63,7 @@ function main(string[] args) {
                     sendTextMessage(fromMobile, k, message);
                 }
             }
-            error err => io:println(err);
+            error err => log:printError(err.message);
         }
     }
 }
@@ -73,7 +73,7 @@ documentation { Returns a map consists of Lead's data
 }
 function getLeadsData() returns map {
     map leadsMap;
-    log:printInfo("salesforceClient -> getQueryResult()");
+    log:printInfo("Salesforce Connector -> Getting query results...");
     string sampleQuery = "SELECT name, phone FROM Lead";
     json|sf:SalesforceConnectorError response = salesforceClient -> getQueryResult(sampleQuery);
     match response {
@@ -86,7 +86,7 @@ function getLeadsData() returns map {
             }
 
             if (jsonRes.nextRecordsUrl != null) {
-                log:printInfo("salesforceClient -> getNextQueryResult()");
+                log:printInfo("Salesforece Connector -> getNextQueryResult()");
 
                 while (jsonRes.nextRecordsUrl != null) {
                     log:printDebug("Found new query result set!");
@@ -96,12 +96,12 @@ function getLeadsData() returns map {
                         json jsonNextRes => {
                             jsonRes = jsonNextRes;
                         }
-                        sf:SalesforceConnectorError err => io:println(err);
+                        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
                     }
                 }
             }
         }
-        sf:SalesforceConnectorError err => io:println(err);
+        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
     }
     return leadsMap;
 }
@@ -123,8 +123,8 @@ function sendTextMessage(string fromMobile, string toMobile, string message) {
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
-            io:println(smsResponse);
+            log:printInfo(smsResponse.sid);
         }
-        error err => io:println(err);
+        error err => log:printError(err.message);
     }
 }

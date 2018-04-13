@@ -123,12 +123,12 @@ function getLeadsData(string leadQuery) returns map {
                         json jsonNextRes => {
                             jsonRes = jsonNextRes;
                         }
-                        sf:SalesforceConnectorError err => log:printError(err.message?:"");
+                        sf:SalesforceConnectorError err => log:printError(err.message);
                     }
                 }
             }
         }
-        sf:SalesforceConnectorError err => log:printError(err.message?:"");
+        sf:SalesforceConnectorError err => log:printError(err.message);
     }
     return leadsMap;
 }

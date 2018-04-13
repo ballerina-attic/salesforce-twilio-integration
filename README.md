@@ -33,7 +33,8 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 
 ### Before you begin
 
-Understand the package structure
+##### Understand the package structure
+
 Ballerina is a complete programming language that can have any custom project structure as you wish. Although language allows you to have any package structure, we'll stick with the following simple package structure for this project.
 
 ```
@@ -129,9 +130,9 @@ endpoint twilio:Client twilioClient {
 
 ## Implementation
 
-You can use SOQL queries to get SObject data. In this example `SELECT` query has been used to get interested Leads' information.
+You can use SOQL queries to get SObject data. In this example a `SELECT` query has been used to get interested Leads' information.
 
-Following function `getLeadsData()` takes query string as the parameter and returns a map consists of Leads' phone number as key and name as value.
+Following function `getLeadsData()` takes query string as the parameter and returns a map consists of Leads' phone number as the key and name as the value.
 
 ```ballerina
 function getLeadsData(string leadQuery) returns map {
@@ -247,6 +248,7 @@ function main(string[] args) {
 
 ## Testing
 
+You can use `Testerina` to test Ballerina implementations. 
 Run `sms_sender_test.bal` file using following command `ballerina run sms-sender` to execute the test function.
 
 ```ballerina
@@ -272,9 +274,10 @@ Enjoy discounts up to 25% by downloading our new Cloud Platform before 31st May'
 ```
 #### Terminal Output 
 
-You will get logs with Twilio SID number as below if success. If failed, logs with error messages.
+You will get logs with Twilio SID number as below if it's successful. If failed, you will get logs with error messages.
 
 ```ballerina
+...
 2018-04-12 13:27:13,869 INFO  [src] - Salesforce Connector -> Getting query results... 
 2018-04-12 13:27:15,718 INFO  [src] - Twilio Connector => Sending messages... 
 2018-04-12 13:27:17,061 INFO  [src] - SM08134284d310461aa7dd4b20d8d2a7b5 

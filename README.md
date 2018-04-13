@@ -253,7 +253,7 @@ Run `sms_sender_test.bal` file using following command `ballerina run sms-sender
 
 ```ballerina
 @test:Config
-function testSendSMS () {
+function testSendSmsToLeads () {
     string sampleQuery = "SELECT name, phone FROM Lead";
 
     log:printInfo("Salesforce-Twilio Integration => sendSMS()");

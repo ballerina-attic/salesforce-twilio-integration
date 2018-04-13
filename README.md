@@ -22,7 +22,7 @@ In this particular use case Salesforce gives the relational contact details of t
 
 You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers and Ballerina Twilio connector to send SMS to those relevant phone numbers.
   
-![alt text]()
+![alt text](https://github.com/erandiganepola/salesforce-twilio-integration/blob/master/Salesforce%20-%20Twilio%20integration.svg)
 
 ## Prerequisites
 

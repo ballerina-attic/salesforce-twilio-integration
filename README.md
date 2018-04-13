@@ -22,6 +22,8 @@ In this particular use case Salesforce gives the relational contact details of t
 
 You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers and Ballerina Twilio connector to send SMS to those relevant phone numbers.
   
+![alt text]()
+
 ## Prerequisites
 
 * JDK 1.8 or later
@@ -37,11 +39,14 @@ Ballerina is a complete programming language that can have any custom project st
 ```
 salesforce-twilio-integration
   ├── .ballerina 
+  └── sms-sender
+  |    └── test
+  |          └── sms_sender_test
+  |    └── constants.bal
+  |    └── Package.md
+  |    └── sms_sender.bal
   └── ballerina.conf
-  └── src
-      └── constants.bal
-      └── integration.bal
-      └── Package.md
+  └── README.md
 ```
 
 Change the configurations in the `ballerina.conf` file. Replace "" with your data.
@@ -58,13 +63,13 @@ SF_ACCESS_TOKEN=""
 SF_CLIENT_ID=""
 SF_CLIENT_SECRET=""
 SF_REFRESH_TOKEN=""
-SF_REFRESH_TOKEN_ENDPOINT=""
-SF_REFRESH_TOKEN_PATH=""
+SF_REFRESH_URL=""
+
 ```
 
-Let's consider `integration.bal` for example. Let's first see how to add the Salesforce configurations, which require OAuth2 configurations and Twilio configurations for the application written in Ballerina language.
+Let's first see how to add the Salesforce configurations and Twilio configurations for the application written in Ballerina language.
 
-#### Setup OAuth2 configurations (for Salesforce Connector)
+#### Setup Salesforce configurations
 Create a Salesforce account and create a connected app by visiting [Salesforce](https://www.salesforce.com) and obtain the following parameters:
 
 * Base URl (Endpoint)
@@ -72,28 +77,28 @@ Create a Salesforce account and create a connected app by visiting [Salesforce](
 * Client Secret
 * Access Token
 * Refresh Token
-* Refresh Token Endpoint
-* Refresh Token Path
+* Refresh URL
 
 Visit [here](https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm) for more information on obtaining OAuth2 credentials.
 
-* Set Salesforce credentials in `ballerina.conf` (Parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
-`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, `SF_REFRESH_TOKEN_ENDPOINT` and `SF_REFRESH_TOKEN_PATH`). 
+* Set Salesforce credentials in `ballerina.conf` (Requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
+`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN` and `SF_REFRESH_URL`). 
 
-`integration.bal` file shows how to create the Salesforce Client endpoint.
+`sms_sender.bal` file shows how to create the Salesforce Client endpoint (Please note getConfVar() utility function is used to get values from conf file.).
 
 ```ballerina
 
 endpoint sf:Client salesforceClient {
-    oauth2Config:{
-        accessToken:getConfVar(SF_ACCESS_TOKEN),
-        baseUrl:getConfVar(SF_URL),
-        clientId:getConfVar(SF_CLIENT_ID),
-        clientSecret:getConfVar(SF_CLIENT_SECRET),
-        refreshToken:getConfVar(SF_REFRESH_TOKEN),
-        refreshTokenEP:getConfVar(SF_REFRESH_TOKEN),
-        refreshTokenPath:getConfVar(SF_REFRESH_TOKEN_PATH),
-        clientConfig:{}
+    baseUrl:getConfVar(SF_URL),
+    clientConfig:{
+        auth:{
+                scheme:"oauth",
+                accessToken: getConfVar(SF_ACCESS_TOKEN),
+                refreshToken:getConfVar(SF_REFRESH_TOKEN),
+                clientId:getConfVar(SF_CLIENT_ID),
+                clientSecret:getConfVar(SF_CLIENT_SECRET),
+                refreshUrl:getConfVar(SF_REFRESH_URL)
+        }
     }
 };
 
@@ -107,21 +112,26 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 
 * Set Twilio credentials in `ballerina.conf` (Required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, `TWILIO_MESSAGE`). 
 
-`integration.bal` file shows how to create the Salesforce Client endpoint.
+`sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
 endpoint twilio:Client twilioClient {
-    accountSid:getConfVar(TWILIO_ACCOUNT_SID),
-    authToken:getConfVar(TWILIO_AUTH_TOKEN),
-    clientConfig:{}
+    auth:{
+            scheme:"basic",
+            username:getConfVar(TWILIO_ACCOUNT_SID),
+            password:getConfVar(TWILIO_AUTH_TOKEN)
+    }
 };
+
 ```
   
 * IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
 ## Implementation
 
-Following function `getLeadsData()` takes query string as parameter and returns a map consists of Lead's phone number as key and name as value.
+You can use SOQL queries to get SObject data. In this example `SELECT` query has been used to get interested Leads' information.
+
+Following function `getLeadsData()` takes query string as the parameter and returns a map consists of Leads' phone number as key and name as value.
 
 ```ballerina
 function getLeadsData(string leadQuery) returns map {
@@ -149,40 +159,50 @@ function getLeadsData(string leadQuery) returns map {
                         json jsonNextRes => {
                             jsonRes = jsonNextRes;
                         }
-                        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
+                        sf:SalesforceConnectorError err => log:printError(err.message?:"");
                     }
                 }
             }
         }
-        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
+        sf:SalesforceConnectorError err => log:printError(err.message?:"");
     }
     return leadsMap;
 }
 
 ```
-Followinf function `sendTextMessage()` takes from-mobile number, to-mobile number and sending message as parameters and sends the request to Twilio connector.
+Following function `sendTextMessage()` takes from-mobile number, to-mobile number and sending message as parameters and sends the request to Twilio connector inorder to send the message to relevant phone number. 
+
+Function returns `true` if message sending gets successful (if it gets SID as return). If the SID is an empty string
+or the result is an error, function returns `false`.
 
 ```ballerina
-function sendTextMessage(string fromMobile, string toMobile, string message) {
+function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean{
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
             log:printInfo(smsResponse.sid);
+            if(smsResponse.sid != ""){
+                return true;
+            }
+            return false;
         }
-        error err => log:printError(err.message);
+        error err => {
+            log:printError(err.message);
+            return false;
+        }
     }
 }
 
 ```
-Inside the main function, it calls to `getLeadsData()` and get needed Lead's data and prepare the customozed SMS. Then send those SMSs to relevant Leads by calling to `sendTextMessage()` function. 
+Inside sendSmsToLeads() function, it takes Leads' data by calling to getLeadsData() function. The result map
+is iterated and not null phone numbers are taken. Customized messages are prepared and sent to relevant Leads' phone numbers.
+Function returns `true` if at least one message is being sent to a Lead, if not `false`.
 
 ```ballerina
+function sendSmsToLeads(string sfQuery) returns boolean  {
+    boolean success = false;
 
-function main(string[] args) {
-
-    string sampleQuery = "SELECT name, phone FROM Lead";
-
-    map leadsDataMap = getLeadsData(sampleQuery);
+    map leadsDataMap = getLeadsData(sfQuery);
     string message = getConfVar(TWILIO_MESSAGE);
     string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
 
@@ -193,11 +213,33 @@ function main(string[] args) {
             string value => {
                 if (k != EMPTY_STRING) {
                     message = "Hi " + value + NEW_LINE_CHARACTER + message;
-                    sendTextMessage(fromMobile, k, message);
+                    boolean response = sendTextMessage(fromMobile, k, message);
+                    if(response){
+                        success = response;
+                    }
                 }
             }
-            error err => log:printError(err.message);
+            error err => {
+                log:printError(err.message);
+            }
         }
+    }
+    return success;
+}
+```
+
+Inside the main function, it calls to `sendSmsToLeads()` by passing the requested query.
+Result status can be checked with the `boolean` value.
+```ballerina
+
+function main(string[] args) {
+    log:printInfo("Salesforce-Twilio Integration -> Main function");
+    boolean result = sendSmsToLeads("SELECT name, phone FROM Lead");
+
+    if(result){
+        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Successful!");
+    } else {
+        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Failed!");
     }
 }
 
@@ -205,7 +247,20 @@ function main(string[] args) {
 
 ## Testing
 
-Run `integration.bal` file using following command `ballerina run src` to excute the main function.
+Run `sms_sender_test.bal` file using following command `ballerina run sms-sender` to execute the test function.
+
+```ballerina
+@test:Config
+function testSendSMS () {
+    string sampleQuery = "SELECT name, phone FROM Lead";
+
+    log:printInfo("Salesforce-Twilio Integration => sendSMS()");
+
+    boolean result = sendSmsToLeads(sampleQuery);
+        test:assertEquals(result, true, msg = "Unsuccessful!!");
+}
+
+```
 
 * You will receive SMS for the relevant numbers as the result.
 
@@ -224,5 +279,6 @@ You will get logs with Twilio SID number as below if success. If failed, logs wi
 2018-04-12 13:27:15,718 INFO  [src] - Twilio Connector => Sending messages... 
 2018-04-12 13:27:17,061 INFO  [src] - SM08134284d310461aa7dd4b20d8d2a7b5 
 2018-04-12 13:27:17,378 INFO  [src] - SM1f40e267c0c2489a9a8ae2172665647f 
+...
 
 ```

@@ -18,20 +18,23 @@ import ballerina/log;
 import wso2/sfdc37 as sf;
 import wso2/twilio;
 import ballerina/config;
+import ballerina/io;
 
 documentation{
     Represents Salesforce client endpoint.
 }
+
 endpoint sf:Client salesforceClient {
-    oauth2Config:{
-        accessToken:getConfVar(SF_ACCESS_TOKEN),
-        baseUrl:getConfVar(SF_URL),
-        clientId:getConfVar(SF_CLIENT_ID),
-        clientSecret:getConfVar(SF_CLIENT_SECRET),
-        refreshToken:getConfVar(SF_REFRESH_TOKEN),
-        refreshTokenEP:getConfVar(SF_REFRESH_TOKEN),
-        refreshTokenPath:getConfVar(SF_REFRESH_TOKEN_PATH),
-        clientConfig:{}
+    baseUrl:getConfVar(SF_URL),
+    clientConfig:{
+        auth:{
+                scheme:"oauth",
+                accessToken: getConfVar(SF_ACCESS_TOKEN),
+                refreshToken:getConfVar(SF_REFRESH_TOKEN),
+                clientId:getConfVar(SF_CLIENT_ID),
+                clientSecret:getConfVar(SF_CLIENT_SECRET),
+                refreshUrl:getConfVar(SF_REFRESH_URL)
+        }
     }
 };
 
@@ -39,19 +42,35 @@ documentation{
     Represents Twilio client endpoint.
 }
 endpoint twilio:Client twilioClient {
-    accountSid:getConfVar(TWILIO_ACCOUNT_SID),
-    authToken:getConfVar(TWILIO_AUTH_TOKEN),
-    clientConfig:{}
+    auth:{
+            scheme:"basic",
+            username:getConfVar(TWILIO_ACCOUNT_SID),
+            password:getConfVar(TWILIO_AUTH_TOKEN)
+    }
 };
 
 documentation{
     Main function to run the integration system
 }
 function main(string[] args) {
+    log:printInfo("Salesforce-Twilio Integration -> Main function");
+    boolean result = sendSmsToLeads("SELECT name, phone FROM Lead");
 
-    string sampleQuery = "SELECT name, phone FROM Lead";
+    if(result){
+        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Successful!");
+    } else {
+        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Failed!");
+    }
+}
 
-    map leadsDataMap = getLeadsData(sampleQuery);
+documentation { Utility function integrate Salesforce and Twilio connectors
+    P{{sfQuery}} query to be sent to Salesforce API
+    R{{}} true if gets success at least once, else false
+}
+function sendSmsToLeads(string sfQuery) returns boolean  {
+    boolean success = false;
+
+    map leadsDataMap = getLeadsData(sfQuery);
     string message = getConfVar(TWILIO_MESSAGE);
     string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
 
@@ -62,12 +81,18 @@ function main(string[] args) {
             string value => {
                 if (k != EMPTY_STRING) {
                     message = "Hi " + value + NEW_LINE_CHARACTER + message;
-                    sendTextMessage(fromMobile, k, message);
+                    boolean response = sendTextMessage(fromMobile, k, message);
+                    if(response){
+                        success = response;
+                    }
                 }
             }
-            error err => log:printError(err.message);
+            error err => {
+                log:printError(err.message);
+            }
         }
     }
+    return success;
 }
 
 documentation { Returns a map consists of Lead's data
@@ -98,12 +123,12 @@ function getLeadsData(string leadQuery) returns map {
                         json jsonNextRes => {
                             jsonRes = jsonNextRes;
                         }
-                        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
+                        sf:SalesforceConnectorError err => log:printError(err.message?:"");
                     }
                 }
             }
         }
-        sf:SalesforceConnectorError err => log:printError(err.messages[0]);
+        sf:SalesforceConnectorError err => log:printError(err.message?:"");
     }
     return leadsMap;
 }
@@ -113,20 +138,38 @@ documentation { Returns the string value for config parameters
     R{{}} string value
 }
 function getConfVar(string varName) returns string {
-    return config:getAsString(varName) but { () => EMPTY_STRING };
+
+    string? confOutput = config:getAsString(varName);
+
+    match confOutput{
+        string stringOutput => {
+            return stringOutput;
+        }
+    () => {
+            return "";
+        }
+    }
 }
 
 documentation { Utility function to send SMS
     P{{fromMobile}} from mobile number
     P{{toMobile}} to mobile number
     P{{message}} sending message
+    R{{}} true if success, else false
 }
-function sendTextMessage(string fromMobile, string toMobile, string message) {
+function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean{
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
             log:printInfo(smsResponse.sid);
+            if(smsResponse.sid != ""){
+                return true;
+            }
+            return false;
         }
-        error err => log:printError(err.message);
+        error err => {
+            log:printError(err.message);
+            return false;
+        }
     }
 }

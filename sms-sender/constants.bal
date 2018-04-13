@@ -53,8 +53,5 @@ documentation { Constant field 'SF_CLIENT_SECRET'. Holds the value of your sales
 documentation { Constant field 'SF_REFRESH_TOKEN'. Holds the value of salesforce resfresh token}
 @final string SF_REFRESH_TOKEN = "SF_REFRESH_TOKEN";
 
-documentation { Constant field 'SF_REFRESH_TOKEN_ENDPOINT'. Holds the value of salesforce refresh token endpoint}
-@final string SF_REFRESH_TOKEN_ENDPOINT = "SF_REFRESH_TOKEN_ENDPOINT";
-
-documentation { Constant field 'SF_REFRESH_TOKEN_PATH'. Holds the value of salesforce refresh token path}
-@final string SF_REFRESH_TOKEN_PATH = "SF_REFRESH_TOKEN_PATH";
+documentation { Constant field 'SF_REFRESH_URL'. Holds the value of the url to refresh the salesforce access token}
+@final string SF_REFRESH_URL = "SF_REFRESH_URL";

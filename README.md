@@ -292,16 +292,18 @@ You can deploy the services that you developed above in your local environment. 
 
 Building
 
-``
+```
+
 <SAMPLE_ROOT_DIRECTORY>$ ballerina build salesforce-twilio-integration/
 
-``
+```
 
 After build is successful, there will be a .balx file inside the target directory. That executable can be executed as follows.
 
 Running
 
-``
+```
+
 <SAMPLE_ROOT_DIRECTORY>$ ballerina run <Exec_Archive_File_Name>
 
-``
+```

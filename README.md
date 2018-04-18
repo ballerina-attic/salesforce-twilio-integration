@@ -11,6 +11,7 @@ To understand how you can use Twilio for sending messages, let's consider a real
 - [Prerequisites](#prerequisites)
 - [Implementation](#implementation)
 - [Testing](#testing)
+- [Deployment](#deployment)
 
 ## What you'll build
 
@@ -283,3 +284,24 @@ You will get logs with Twilio SID number as below if it's successful. If failed,
 ...
 
 ```
+
+## Deployment
+
+#### Deploying locally
+You can deploy the services that you developed above in your local environment. You can create the Ballerina executable archives (.balx) first and run them in your local environment as follows.
+
+Building
+
+``
+<SAMPLE_ROOT_DIRECTORY>$ ballerina build salesforce-twilio-integration/
+
+``
+
+After build is successful, there will be a .balx file inside the target directory. That executable can be executed as follows.
+
+Running
+
+``
+<SAMPLE_ROOT_DIRECTORY>$ ballerina run <Exec_Archive_File_Name>
+
+``

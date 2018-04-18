@@ -9,7 +9,7 @@ To understand how you can use Twilio for sending messages, let's consider a real
 ### Available Sections:
 - [What you'll build](#what-youll-build)
 - [Prerequisites](#prerequisites)
-- [Implementation](#implementation)
+- [Developing the Program](#developing-the-program)
 - [Testing](#testing)
 - [Deployment](#deployment)
 
@@ -127,7 +127,7 @@ endpoint twilio:Client twilioClient {
   
 * IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
-## Implementation
+## Developing the Program
 
 You can use SOQL queries to get SObject data. In this example a `SELECT` query has been used to get interested Leads' information.
 

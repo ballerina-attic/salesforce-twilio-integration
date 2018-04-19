@@ -24,15 +24,15 @@ documentation{
     Represents Salesforce client endpoint.
 }
 endpoint sf:Client salesforceClient {
-    baseUrl:getConfVar(SF_URL),
+    baseUrl: config:getAsString(SF_URL),
     clientConfig:{
         auth:{
             scheme: "oauth",
-            accessToken: getConfVar(SF_ACCESS_TOKEN),
-            refreshToken: getConfVar(SF_REFRESH_TOKEN),
-            clientId: getConfVar(SF_CLIENT_ID),
-            clientSecret: getConfVar(SF_CLIENT_SECRET),
-            refreshUrl: getConfVar(SF_REFRESH_URL)
+            accessToken: config:getAsString(SF_ACCESS_TOKEN),
+            refreshToken: config:getAsString(SF_REFRESH_TOKEN),
+            clientId: config:getAsString(SF_CLIENT_ID),
+            clientSecret: config:getAsString(SF_CLIENT_SECRET),
+            refreshUrl: config:getAsString(SF_REFRESH_URL)
         }
     }
 };
@@ -41,11 +41,8 @@ documentation{
     Represents Twilio client endpoint.
 }
 endpoint twilio:Client twilioClient {
-    auth:{
-        scheme: "basic",
-        username: getConfVar(TWILIO_ACCOUNT_SID),
-        password: getConfVar(TWILIO_AUTH_TOKEN)
-    }
+    accountSid: config:getAsString(TWILIO_ACCOUNT_SID),
+    authToken: config:getAsString(TWILIO_AUTH_TOKEN)
 };
 
 documentation{
@@ -67,11 +64,10 @@ documentation { Utility function integrate Salesforce and Twilio connectors
     R{{}} true if gets success at least once, else false
 }
 function sendSmsToLeads(string sfQuery) returns boolean  {
-
     boolean success = false;
     map leadsDataMap = getLeadsData(sfQuery);
-    string message = getConfVar(TWILIO_MESSAGE);
-    string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
+    string message = config:getAsString(TWILIO_MESSAGE);
+    string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
 
     log:printInfo("Twilio Connector -> Sending messages...");
     foreach k, v in leadsDataMap {
@@ -104,10 +100,10 @@ function getLeadsData(string leadQuery) returns map {
     json|sf:SalesforceConnectorError response = salesforceClient -> getQueryResult(leadQuery);
     match response {
         json jsonRes => {
-            json[] records = check < json[]>jsonRes.records;
+            json[] records = check <json[]>jsonRes.records;
             foreach record in records{
-                string key = record.Phone.toString() but { () => "" };
-                string value = record.Name.toString() but { () => "" };
+                string key = record.Phone.toString();
+                string value = record.Name.toString();
                 leadsMap[key] = value;
             }
 
@@ -116,7 +112,7 @@ function getLeadsData(string leadQuery) returns map {
 
                 while (jsonRes.nextRecordsUrl != null) {
                     log:printDebug("Found new query result set!");
-                    string nextQueryUrl = jsonRes.nextRecordsUrl.toString() ?: "";
+                    string nextQueryUrl = jsonRes.nextRecordsUrl.toString();
                     response = salesforceClient -> getNextQueryResult(nextQueryUrl);
                     match response {
                         json jsonNextRes => {
@@ -132,18 +128,6 @@ function getLeadsData(string leadQuery) returns map {
     return leadsMap;
 }
 
-documentation { Returns the string value for config parameters
-    P{{varName}} config variable name
-    R{{}} string value
-}
-function getConfVar(string varName) returns string {
-    string? confOutput = config:getAsString(varName);
-    match confOutput{
-        string stringOutput => return stringOutput;
-        () => return EMPTY_STRING;
-    }
-}
-
 documentation { Utility function to send SMS
     P{{fromMobile}} from mobile number
     P{{toMobile}} to mobile number
@@ -154,13 +138,10 @@ function sendTextMessage(string fromMobile, string toMobile, string message) ret
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
-            log:printInfo(smsResponse.sid);
-            if(smsResponse.sid != EMPTY_STRING){
-                return true;
-            }
-            return false;
+            log:printInfo(smsResponse);
+            return smsResponse.sid != EMPTY_STRING;
         }
-        error err => {
+        twilio:TwilioError err => {
             log:printError(err.message);
             return false;
         }

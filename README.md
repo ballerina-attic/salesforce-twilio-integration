@@ -76,7 +76,7 @@ Create a Salesforce account and create a connected app by visiting [Salesforce](
 
 For more information on obtaining OAuth2 credentials, visit [Salesforce help documentation](https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm).
 
-* Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
+Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
 `SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, and `SF_REFRESH_URL`). 
 
 The `sms_sender.bal` file shows how to create the Salesforce Client endpoint (note that the `getConfVar()` utility function is used to get values from the .conf file).
@@ -105,7 +105,7 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 * Account SId
 * Auth Token
 
-* Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`). 
+Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`). 
 
 The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 

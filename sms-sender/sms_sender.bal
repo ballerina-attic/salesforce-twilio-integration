@@ -51,7 +51,6 @@ function main(string[] args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT name, phone FROM Lead";
     boolean result = sendSmsToLeads(sampleQuery);
-
     if(result){
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
     } else {
@@ -115,6 +114,10 @@ function getLeadsData(string leadQuery) returns (map|boolean) {
     return leadsMap;
 }
 
+documentation { Utility function to add json records to map
+    P{{response}} json respones
+    P{{leadsMap}} map of leads to be added the record data
+}
 function addRecordsToMap(json response, map leadsMap) {
     json[] records = check <json[]>response.records;
     foreach record in records {

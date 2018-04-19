@@ -9,8 +9,9 @@ To understand how you can use Twilio for sending messages, let's consider a real
 ### Available Sections:
 - [What you'll build](#what-youll-build)
 - [Prerequisites](#prerequisites)
-- [Implementation](#implementation)
+- [Developing the Program](#developing-the-program)
 - [Testing](#testing)
+- [Deployment](#deployment)
 
 ## What you'll build
 
@@ -126,7 +127,7 @@ endpoint twilio:Client twilioClient {
   
 * IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
-## Implementation
+## Developing the Program
 
 You can use SOQL queries to get SObject data. In this example a `SELECT` query has been used to get interested Leads' information.
 
@@ -281,5 +282,28 @@ You will get logs with Twilio SID number as below if it's successful. If failed,
 2018-04-12 13:27:17,061 INFO  [src] - SM08134284d310461aa7dd4b20d8d2a7b5 
 2018-04-12 13:27:17,378 INFO  [src] - SM1f40e267c0c2489a9a8ae2172665647f 
 ...
+
+```
+
+## Deployment
+
+#### Deploying locally
+You can deploy the services that you developed above in your local environment. You can create the Ballerina executable archives (.balx) first and run them in your local environment as follows.
+
+Building
+
+```
+
+<SAMPLE_ROOT_DIRECTORY>$ ballerina build salesforce-twilio-integration/
+
+```
+
+After build is successful, there will be a .balx file inside the target directory. That executable can be executed as follows.
+
+Running
+
+```
+
+<SAMPLE_ROOT_DIRECTORY>$ ballerina run <Exec_Archive_File_Name>
 
 ```

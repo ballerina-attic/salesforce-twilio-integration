@@ -105,6 +105,8 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 * Account SId
 * Auth Token
 
+For more information on obtaining the above parameters, see [Create a Twilio Authy app](https://www.twilio.com/console/authy/applications).
+
 Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`). 
 
 The `sms_sender.bal` file shows how to create the Twilio Client endpoint.

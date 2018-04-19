@@ -14,26 +14,25 @@
 // specific language governing permissions and limitations
 // under the License.package sample;
 
-import ballerina/log;
 import wso2/sfdc37 as sf;
 import wso2/twilio;
 import ballerina/config;
+import ballerina/log;
 import ballerina/io;
 
 documentation{
     Represents Salesforce client endpoint.
 }
-
 endpoint sf:Client salesforceClient {
     baseUrl:getConfVar(SF_URL),
     clientConfig:{
         auth:{
-                scheme:"oauth",
-                accessToken: getConfVar(SF_ACCESS_TOKEN),
-                refreshToken:getConfVar(SF_REFRESH_TOKEN),
-                clientId:getConfVar(SF_CLIENT_ID),
-                clientSecret:getConfVar(SF_CLIENT_SECRET),
-                refreshUrl:getConfVar(SF_REFRESH_URL)
+            scheme: "oauth",
+            accessToken: getConfVar(SF_ACCESS_TOKEN),
+            refreshToken: getConfVar(SF_REFRESH_TOKEN),
+            clientId: getConfVar(SF_CLIENT_ID),
+            clientSecret: getConfVar(SF_CLIENT_SECRET),
+            refreshUrl: getConfVar(SF_REFRESH_URL)
         }
     }
 };
@@ -43,9 +42,9 @@ documentation{
 }
 endpoint twilio:Client twilioClient {
     auth:{
-            scheme:"basic",
-            username:getConfVar(TWILIO_ACCOUNT_SID),
-            password:getConfVar(TWILIO_AUTH_TOKEN)
+        scheme: "basic",
+        username: getConfVar(TWILIO_ACCOUNT_SID),
+        password: getConfVar(TWILIO_AUTH_TOKEN)
     }
 };
 
@@ -68,13 +67,13 @@ documentation { Utility function integrate Salesforce and Twilio connectors
     R{{}} true if gets success at least once, else false
 }
 function sendSmsToLeads(string sfQuery) returns boolean  {
-    boolean success = false;
 
+    boolean success = false;
     map leadsDataMap = getLeadsData(sfQuery);
     string message = getConfVar(TWILIO_MESSAGE);
     string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
 
-    log:printInfo("Twilio Connector => Sending messages...");
+    log:printInfo("Twilio Connector -> Sending messages...");
     foreach k, v in leadsDataMap {
         string|error result = <string>v;
         match result {
@@ -138,16 +137,10 @@ documentation { Returns the string value for config parameters
     R{{}} string value
 }
 function getConfVar(string varName) returns string {
-
     string? confOutput = config:getAsString(varName);
-
     match confOutput{
-        string stringOutput => {
-            return stringOutput;
-        }
-    () => {
-            return "";
-        }
+        string stringOutput => return stringOutput;
+        () => return EMPTY_STRING;
     }
 }
 
@@ -157,12 +150,12 @@ documentation { Utility function to send SMS
     P{{message}} sending message
     R{{}} true if success, else false
 }
-function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean{
+function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
     var details = twilioClient -> sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
             log:printInfo(smsResponse.sid);
-            if(smsResponse.sid != ""){
+            if(smsResponse.sid != EMPTY_STRING){
                 return true;
             }
             return false;

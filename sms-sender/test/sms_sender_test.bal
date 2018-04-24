@@ -2,11 +2,13 @@ import ballerina/log;
 import ballerina/test;
 
 @test:Config
-function testSendSmsToLeads () {
+function testSendSmsToLeads() {
+    log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT name, phone FROM Lead";
-
-    log:printInfo("Salesforce-Twilio Integration => sendSMS()");
-
     boolean result = sendSmsToLeads(sampleQuery);
-        test:assertEquals(result, true, msg = "Unsuccessful!!");
+    if (result) {
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
+    } else {
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");
+    }
 }

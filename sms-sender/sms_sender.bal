@@ -49,7 +49,7 @@ documentation{
 }
 function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
-    string sampleQuery = "SELECT name, phone FROM Lead";
+    string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
     if (result) {
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
@@ -62,29 +62,27 @@ documentation { Utility function integrate Salesforce and Twilio connectors
     P{{sfQuery}} query to be sent to Salesforce API
 }
 function sendSmsToLeads(string sfQuery) returns boolean {
-    var leadsDataVar = getLeadsData(sfQuery);
-    match leadsDataVar {
-        map leadsDataMap => {
-            string messageBody = config:getAsString(TWILIO_MESSAGE);
-            string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
-            foreach k, v in leadsDataMap {
-                string result = <string>v;
-                string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
-                boolean isSuccess = sendTextMessage(fromMobile, k, message);
-                if (!isSuccess) {
-                    return false;
-                }
-            }
+    (map, boolean) leadsResponse = getLeadsData(sfQuery);
+    map leadsDataMap;
+    boolean isSuccess;
+    (leadsDataMap, isSuccess) = leadsResponse;
+
+    if (isSuccess){
+        string messageBody = config:getAsString(TWILIO_MESSAGE);
+        string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
+        foreach k, v in leadsDataMap {
+            string result = <string>v;
+            string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
+            isSuccess = sendTextMessage(fromMobile, k, message);
         }
-        boolean isSuccess => return isSuccess;
     }
-    return true;
+    return isSuccess;
 }
 
 documentation { Returns a map consists of Lead's data
     R{{}} map consists of Lead data, phone as key, name as value
 }
-function getLeadsData(string leadQuery) returns (map|boolean) {
+function getLeadsData(string leadQuery) returns (map, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
     map leadsMap;
     var response = salesforceClient->getQueryResult(leadQuery);
@@ -100,7 +98,7 @@ function getLeadsData(string leadQuery) returns (map|boolean) {
                     sf:SalesforceConnectorError err => {
                         log:printDebug("Salesforce Connector -> Failed to get leads data");
                         log:printError(err.message);
-                        return false;
+                        return (leadsMap, false);
                     }
                 }
             }
@@ -108,10 +106,10 @@ function getLeadsData(string leadQuery) returns (map|boolean) {
         sf:SalesforceConnectorError err => {
             log:printDebug("Salesforce Connector -> Failed to get leads data");
             log:printError(err.message);
-            return false;
+            return (leadsMap, false);
         }
     }
-    return leadsMap;
+    return (leadsMap, true);
 }
 
 documentation { Utility function to add json records to map

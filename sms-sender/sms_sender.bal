@@ -19,7 +19,7 @@ import wso2/twilio;
 import ballerina/config;
 import ballerina/log;
 
-documentation{
+documentation {
     Represents Salesforce client endpoint.
 }
 endpoint sf:Client salesforceClient {
@@ -36,7 +36,7 @@ endpoint sf:Client salesforceClient {
     }
 };
 
-documentation{
+documentation {
     Represents Twilio client endpoint.
 }
 endpoint twilio:Client twilioClient {
@@ -44,8 +44,8 @@ endpoint twilio:Client twilioClient {
     authToken: config:getAsString(TWILIO_AUTH_TOKEN)
 };
 
-documentation{
-    Main function to run the integration system
+documentation {
+    Main function to run the integration system.
 }
 function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
@@ -58,8 +58,11 @@ function main(string... args) {
     }
 }
 
-documentation { Utility function integrate Salesforce and Twilio connectors
-    P{{sfQuery}} query to be sent to Salesforce API
+documentation {
+    Utility function integrate Salesforce and Twilio connectors.
+
+    P{{sfQuery}} Query to be sent to Salesforce API
+    R{{}} State of whether the process of sending SMS to leads are success or not
 }
 function sendSmsToLeads(string sfQuery) returns boolean {
     (map, boolean) leadsResponse = getLeadsData(sfQuery);
@@ -79,8 +82,11 @@ function sendSmsToLeads(string sfQuery) returns boolean {
     return isSuccess;
 }
 
-documentation { Returns a map consists of Lead's data
-    R{{}} map consists of Lead data, phone as key, name as value
+documentation {
+    Returns a map consists of Lead's data.
+
+    P{{leadQuery}} Query to retrieve all Salesforce leads
+    R{{}} Tuple of maap consists of Lead data and the indication of process is succss or not
 }
 function getLeadsData(string leadQuery) returns (map, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
@@ -112,9 +118,11 @@ function getLeadsData(string leadQuery) returns (map, boolean) {
     return (leadsMap, true);
 }
 
-documentation { Utility function to add json records to map
-    P{{response}} json respones
-    P{{leadsMap}} map of leads to be added the record data
+documentation {
+    Utility function to add json records to map.
+
+    P{{response}} Json response
+    P{{leadsMap}} Map of leads to be added the record data
 }
 function addRecordsToMap(json response, map leadsMap) {
     json[] records = check <json[]>response.records;
@@ -127,10 +135,14 @@ function addRecordsToMap(json response, map leadsMap) {
     }
 }
 
-documentation { Utility function to send SMS
+documentation {
+
+    Utility function to send SMS.
+
     P{{fromMobile}} from mobile number
     P{{toMobile}} to mobile number
     P{{message}} sending message
+    R{{}} The status of sending SMS success or not
 }
 function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
     var details = twilioClient->sendSms(fromMobile, toMobile, message);

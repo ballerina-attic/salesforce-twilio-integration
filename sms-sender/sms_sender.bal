@@ -23,8 +23,8 @@ documentation{
     Represents Salesforce client endpoint.
 }
 endpoint sf:Client salesforceClient {
-    baseUrl: config:getAsString(SF_URL),
     clientConfig: {
+        url: config:getAsString(SF_URL),
         auth: {
             scheme: "oauth",
             accessToken: config:getAsString(SF_ACCESS_TOKEN),
@@ -40,7 +40,7 @@ documentation{
     Represents Twilio client endpoint.
 }
 endpoint twilio:Client twilioClient {
-    accountSid: config:getAsString(TWILIO_ACCOUNT_SID),
+    accountSId: config:getAsString(TWILIO_ACCOUNT_SID),
     authToken: config:getAsString(TWILIO_AUTH_TOKEN)
 };
 
@@ -51,7 +51,7 @@ function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT name, phone FROM Lead";
     boolean result = sendSmsToLeads(sampleQuery);
-    if (result){
+    if (result) {
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
     } else {
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");

@@ -1,12 +1,11 @@
 # Salesforce-Twilio Integration
 
-[Salesforce](https://www.salesforce.com) is the world’s #1 CRM platform that employees can access entirely over the Internet. 
-[Twilio](https://www.twilio.com/) is a cloud communications platform for building SMS, Voice & Messaging applications on an API built for global scale. 
-To understand how you can use Twilio for sending messages, let's consider a real-world use case of service promotional SMS sending system to a selected group of Leads. 
+[Salesforce](https://www.salesforce.com) is the world’s #1 CRM platform that employees can access entirely over the Internet. [Twilio](https://www.twilio.com/) is a cloud communications platform for building SMS, Voice, and Messaging applications on an API built for global scale. To understand how you can use Twilio for sending messages, let's consider a real-world use case of a service promotional SMS sending system to a selected group of Leads.
 
-> This guide walks you through a typical cross-platform integration, which uses Ballerina to send customized SMS messages via Twilio, to a set of Leads that are taken from Salesforce.
+> This guide walks you through a typical cross-platform integration that uses Ballerina to send customized SMS messages via Twilio to a set of Leads that are taken from Salesforce.
 
-### Available Sections:
+The following are the sections available in this guide.
+
 - [What you'll build](#what-youll-build)
 - [Prerequisites](#prerequisites)
 - [Developing the Program](#developing-the-program)
@@ -15,12 +14,9 @@ To understand how you can use Twilio for sending messages, let's consider a real
 
 ## What you'll build
 
-In this particular use case Salesforce gives the relational contact details of the selected Leads and 
-Twilio is used to contact them via SMS to send promotional messages for the respective user group. 
-This will represent a typical cross-platform integration that a marketing or promotion manager might require.
+In this particular use case, Salesforce gives the relational contact details of the selected Leads and Twilio is used to contact them via SMS to send promotional messages for the respective user group. This represents a typical cross-platform integration that a marketing or promotion manager might require.
 
-You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers 
-(by sending SOQL query) and Ballerina Twilio connector to send SMS to those relevant phone numbers.
+You can use Ballerina Salesforce connector to get the interested leads with their names and phone numbers (by sending an SOQL query) and Ballerina Twilio connector to send an SMS to those relevant phone numbers.
   
 ![alt text](https://github.com/erandiganepola/salesforce-twilio-integration/blob/master/Salesforce%20-%20Twilio%20integration.svg)
 
@@ -35,7 +31,7 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 
 ##### Understand the package structure
 
-Ballerina is a complete programming language that can have any custom project structure as you wish. Although language allows you to have any package structure, we'll stick with the following simple package structure for this project.
+Ballerina is a complete programming language that can have any custom project structure as you wish. Although the language allows you to have any package structure, use the following simple package structure for this project.
 
 ```
 salesforce-twilio-integration 
@@ -70,7 +66,7 @@ SF_REFRESH_URL=""
 Let's first see how to add the Salesforce configurations and Twilio configurations for the application written in Ballerina language.
 
 #### Setup Salesforce configurations
-Create a Salesforce account and create a connected app by visiting [Salesforce](https://www.salesforce.com) and obtain the following parameters:
+Create a Salesforce account and create a connected app by visiting [Salesforce](https://www.salesforce.com). Obtain the following parameters:
 
 * Base URl (Endpoint)
 * Client Id
@@ -79,10 +75,10 @@ Create a Salesforce account and create a connected app by visiting [Salesforce](
 * Refresh Token
 * Refresh URL
 
-Visit [here](https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm) for more information on obtaining OAuth2 credentials.
+For more information on obtaining OAuth2 credentials, visit [Salesforce help documentation](https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm).
 
-* Set Salesforce credentials in `ballerina.conf` (Requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
-`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN` and `SF_REFRESH_URL`). 
+Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
+`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, and `SF_REFRESH_URL`).
 
 `sms_sender.bal` file shows how to create the Salesforce Client endpoint.
 
@@ -108,9 +104,11 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 * Account SId
 * Auth Token
 
-* Set Twilio credentials in `ballerina.conf` (Required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, `TWILIO_MESSAGE`). 
+For more information on obtaining the above parameters, see [Create a Twilio Authy app](https://www.twilio.com/console/authy/applications).
 
-`sms_sender.bal` file shows how to create the Twilio Client endpoint.
+Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`).
+
+The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
 endpoint twilio:Client twilioClient {
@@ -122,13 +120,13 @@ endpoint twilio:Client twilioClient {
 };
 ```
   
-* IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
+> IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
 
 ## Developing the Program
 
-You can use SOQL queries to get SObject data. In this example a `SELECT` query has been used to get interested Leads' information.
+You can use SOQL queries to get SObject data. In this example a `SELECT` query is used to get interested Leads' information.
 
-Following function `getLeadsData()` takes query string as the parameter and returns a map consists of Leads' phone number as the key and name as the value.
+The `getLeadsData()` function takes a query string as the parameter and returns a map that consists of Leads' phone number as the key and name as the value.
 
 ```ballerina
 function getLeadsData(string leadQuery) returns (map, boolean) {
@@ -161,7 +159,8 @@ function getLeadsData(string leadQuery) returns (map, boolean) {
     return (leadsMap, true);
 }
 ```
-Following function `sendTextMessage()` takes from-mobile number, to-mobile number and sending message as parameters and sends the request to Twilio connector inorder to send the message to relevant phone number. 
+
+The `sendTextMessage()` function takes the `from-mobile number`, `to-mobile` number, and the `message` that is sent as parameters and sends the request to the Twilio connector. This is done to send the message to the relevant phone number.
 
 Function returns `true` if message sending gets successful (if it gets SID as return). If the SID is an empty string
 or the result is an error, function returns `false`.
@@ -184,9 +183,7 @@ function sendTextMessage(string fromMobile, string toMobile, string message) ret
     return false;
 }
 ```
-Inside sendSmsToLeads() function, it takes Leads' data by calling to getLeadsData() function. The result map
-is iterated and not null phone numbers are taken. Customized messages are prepared and sent to relevant Leads' phone numbers.
-Function returns `true` if at least one message is being sent to a Lead, if not `false`.
+Inside the `sendSmsToLeads()` function, it takes the Lead's data by calling the `getLeadsData()` function. The result map is iterated and phone numbers that are not null are taken. Customized messages are prepared and sent to relevant Leads' phone numbers. The function returns `true` if at least one message is being sent to a Lead. If not, this returns `false`.
 
 ```ballerina
 function sendSmsToLeads(string sfQuery) returns boolean {
@@ -211,6 +208,8 @@ function sendSmsToLeads(string sfQuery) returns boolean {
 Inside the main function, it calls to `sendSmsToLeads()` by passing the requested query.
 Result status can be checked with the `boolean` value.
 
+Inside the main function, it calls the `sendSmsToLeads()` function by passing the requested query. The result status can be checked with the `boolean` value.
+
 ```ballerina
 function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
@@ -226,8 +225,7 @@ function main(string... args) {
 
 ## Testing
 
-You can use `Testerina` to test Ballerina implementations. 
-Run `sms_sender_test.bal` file using following command `ballerina run sms-sender` to execute the test function.
+You can use `Testerina` to test Ballerina implementations. Run the `sms_sender_test.bal` file using the `ballerina run sms-sender` command to execute the test function.
 
 ```ballerina
 @test:Config
@@ -243,7 +241,7 @@ function testSendSmsToLeads() {
 }
 ```
 
-* You will receive SMS for the relevant numbers as the result.
+* You receive an SMS with the relevant numbers as the result.
 
 #### Sample Result SMS
 ```
@@ -253,9 +251,9 @@ Enjoy discounts up to 25% by downloading our new Cloud Platform before 31st May'
 ```
 #### Terminal Output 
 
-You will get logs with Twilio SID number as below if it's successful. If failed, you will get logs with error messages.
+You receive logs with Twilio SID number as shown below if it is successful. If not successful, you see logs with error messages.
 
-```ballerina
+```bash
 ...
 2018-04-12 13:27:13,869 INFO  [src] - Salesforce Connector -> Getting query results... 
 2018-04-12 13:27:15,718 INFO  [src] - Twilio Connector => Sending messages... 
@@ -270,20 +268,16 @@ You will get logs with Twilio SID number as below if it's successful. If failed,
 #### Deploying locally
 You can deploy the services that you developed above in your local environment. You can create the Ballerina executable archives (.balx) first and run them in your local environment as follows.
 
-Building
+**Building**
 
 ```
-
 <SAMPLE_ROOT_DIRECTORY>$ ballerina build salesforce-twilio-integration/
-
 ```
 
 After build is successful, there will be a .balx file inside the target directory. That executable can be executed as follows.
 
-Running
+**Running**
 
 ```
-
 <SAMPLE_ROOT_DIRECTORY>$ ballerina run <Exec_Archive_File_Name>
-
 ```

@@ -1,6 +1,6 @@
 # Salesforce-Twilio Integration
 
-[Salesforce](https://www.salesforce.com) is the world’s #1 CRM platform that employees can access entirely over the Internet. [Twilio](https://www.twilio.com/) is a cloud communications platform for building SMS, Voice, and Messaging applications on an API built for global scale. To understand how you can use Twilio for sending messages, let's consider a real-world use case of a service promotional SMS sending system to a selected group of Leads. 
+[Salesforce](https://www.salesforce.com) is the world’s #1 CRM platform that employees can access entirely over the Internet. [Twilio](https://www.twilio.com/) is a cloud communications platform for building SMS, Voice, and Messaging applications on an API built for global scale. To understand how you can use Twilio for sending messages, let's consider a real-world use case of a service promotional SMS sending system to a selected group of Leads.
 
 > This guide walks you through a typical cross-platform integration that uses Ballerina to send customized SMS messages via Twilio to a set of Leads that are taken from Salesforce.
 
@@ -78,26 +78,24 @@ Create a Salesforce account and create a connected app by visiting [Salesforce](
 For more information on obtaining OAuth2 credentials, visit [Salesforce help documentation](https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm).
 
 Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL`, `SF_ACCESS_TOKEN`, `SF_CLIENT_ID`,
-`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, and `SF_REFRESH_URL`). 
+`SF_CLIENT_SECRET`, `SF_REFRESH_TOKEN`, and `SF_REFRESH_URL`).
 
-The `sms_sender.bal` file shows how to create the Salesforce Client endpoint (note that the `getConfVar()` utility function is used to get values from the .conf file).
+`sms_sender.bal` file shows how to create the Salesforce Client endpoint.
 
 ```ballerina
-
 endpoint sf:Client salesforceClient {
-    baseUrl:getConfVar(SF_URL),
     clientConfig:{
+        url: ""
         auth:{
-                scheme:"oauth",
-                accessToken: getConfVar(SF_ACCESS_TOKEN),
-                refreshToken:getConfVar(SF_REFRESH_TOKEN),
-                clientId:getConfVar(SF_CLIENT_ID),
-                clientSecret:getConfVar(SF_CLIENT_SECRET),
-                refreshUrl:getConfVar(SF_REFRESH_URL)
+            scheme:"oauth",
+            accessToken: "",
+            refreshToken: "",
+            clientId: "",
+            clientSecret: "",
+            refreshUrl: ""
         }
     }
 };
-
 ```
 
 #### Setup Twilio configurations
@@ -108,19 +106,18 @@ Create a [Twilio](https://www.twilio.com/) account and obtain the following para
 
 For more information on obtaining the above parameters, see [Create a Twilio Authy app](https://www.twilio.com/console/authy/applications).
 
-Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`). 
+Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_MOBILE`, and `TWILIO_MESSAGE`).
 
 The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
 endpoint twilio:Client twilioClient {
     auth:{
-            scheme:"basic",
-            username:getConfVar(TWILIO_ACCOUNT_SID),
-            password:getConfVar(TWILIO_AUTH_TOKEN)
+        scheme:"basic",
+        username: "",
+        password: ""
     }
 };
-
 ```
   
 > IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
@@ -132,114 +129,98 @@ You can use SOQL queries to get SObject data. In this example a `SELECT` query i
 The `getLeadsData()` function takes a query string as the parameter and returns a map that consists of Leads' phone number as the key and name as the value.
 
 ```ballerina
-function getLeadsData(string leadQuery) returns map {
+function getLeadsData(string leadQuery) returns (map, boolean) {
+    log:printDebug("Salesforce Connector -> Getting query results");
     map leadsMap;
-    log:printInfo("Salesforce Connector -> Getting query results...");
-
-    json|sf:SalesforceConnectorError response = salesforceClient -> getQueryResult(leadQuery);
+    var response = salesforceClient->getQueryResult(leadQuery);
     match response {
         json jsonRes => {
-            json[] records = check < json[]>jsonRes.records;
-            foreach record in records{
-                string key = record.Phone.toString() but { () => "" };
-                string value = record.Name.toString() but { () => "" };
-                leadsMap[key] = value;
-            }
-
-            if (jsonRes.nextRecordsUrl != null) {
-                log:printInfo("Salesforece Connector -> getNextQueryResult()");
-
-                while (jsonRes.nextRecordsUrl != null) {
-                    log:printDebug("Found new query result set!");
-                    string nextQueryUrl = jsonRes.nextRecordsUrl.toString() ?: "";
-                    response = salesforceClient -> getNextQueryResult(nextQueryUrl);
-                    match response {
-                        json jsonNextRes => {
-                            jsonRes = jsonNextRes;
-                        }
-                        sf:SalesforceConnectorError err => log:printError(err.message?:"");
+            addRecordsToMap(jsonRes, leadsMap);
+            while (jsonRes.nextRecordsUrl != null) {
+                log:printDebug("Found new query result set!");
+                string nextQueryUrl = jsonRes.nextRecordsUrl.toString();
+                response = salesforceClient->getNextQueryResult(nextQueryUrl);
+                match response {
+                    json jsonNextRes => addRecordsToMap(jsonNextRes, leadsMap);
+                    sf:SalesforceConnectorError err => {
+                        log:printDebug("Salesforce Connector -> Failed to get leads data");
+                        log:printError(err.message);
+                        return (leadsMap, false);
                     }
                 }
             }
         }
-        sf:SalesforceConnectorError err => log:printError(err.message?:"");
+        sf:SalesforceConnectorError err => {
+            log:printDebug("Salesforce Connector -> Failed to get leads data");
+            log:printError(err.message);
+            return (leadsMap, false);
+        }
     }
-    return leadsMap;
+    return (leadsMap, true);
 }
-
 ```
 
-The `sendTextMessage()` function takes the `from-mobile number`, `to-mobile` number, and the `message` that is sent as parameters and sends the request to the Twilio connector. This is done to send the message to the relevant phone number. 
+The `sendTextMessage()` function takes the `from-mobile number`, `to-mobile` number, and the `message` that is sent as parameters and sends the request to the Twilio connector. This is done to send the message to the relevant phone number.
 
 Function returns `true` if message sending gets successful (if it gets SID as return). If the SID is an empty string
 or the result is an error, function returns `false`.
 
 ```ballerina
-function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean{
-    var details = twilioClient -> sendSms(fromMobile, toMobile, message);
+function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
+    var details = twilioClient->sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
-            log:printInfo(smsResponse.sid);
-            if(smsResponse.sid != ""){
+            if (smsResponse.sid != EMPTY_STRING) {
+                log:printDebug("Twilio Connector -> SMS successfully sent to " + toMobile);
                 return true;
             }
-            return false;
         }
-        error err => {
+        twilio:TwilioError err => {
+            log:printDebug("Twilio Connector -> SMS failed sent to " + toMobile);
             log:printError(err.message);
-            return false;
         }
     }
+    return false;
 }
-
 ```
 Inside the `sendSmsToLeads()` function, it takes the Lead's data by calling the `getLeadsData()` function. The result map is iterated and phone numbers that are not null are taken. Customized messages are prepared and sent to relevant Leads' phone numbers. The function returns `true` if at least one message is being sent to a Lead. If not, this returns `false`.
 
 ```ballerina
-function sendSmsToLeads(string sfQuery) returns boolean  {
-    boolean success = false;
+function sendSmsToLeads(string sfQuery) returns boolean {
+    (map, boolean) leadsResponse = getLeadsData(sfQuery);
+    map leadsDataMap;
+    boolean isSuccess;
+    (leadsDataMap, isSuccess) = leadsResponse;
 
-    map leadsDataMap = getLeadsData(sfQuery);
-    string message = getConfVar(TWILIO_MESSAGE);
-    string fromMobile = getConfVar(TWILIO_FROM_MOBILE);
-
-    log:printInfo("Twilio Connector => Sending messages...");
-    foreach k, v in leadsDataMap {
-        string|error result = <string>v;
-        match result {
-            string value => {
-                if (k != EMPTY_STRING) {
-                    message = "Hi " + value + NEW_LINE_CHARACTER + message;
-                    boolean response = sendTextMessage(fromMobile, k, message);
-                    if(response){
-                        success = response;
-                    }
-                }
-            }
-            error err => {
-                log:printError(err.message);
-            }
+    if (isSuccess){
+        string messageBody = config:getAsString(TWILIO_MESSAGE);
+        string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
+        foreach k, v in leadsDataMap {
+            string result = <string>v;
+            string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
+            isSuccess = sendTextMessage(fromMobile, k, message);
         }
     }
-    return success;
+    return isSuccess;
 }
 ```
+
+Inside the main function, it calls to `sendSmsToLeads()` by passing the requested query.
+Result status can be checked with the `boolean` value.
 
 Inside the main function, it calls the `sendSmsToLeads()` function by passing the requested query. The result status can be checked with the `boolean` value.
 
 ```ballerina
-
-function main(string[] args) {
-    log:printInfo("Salesforce-Twilio Integration -> Main function");
-    boolean result = sendSmsToLeads("SELECT name, phone FROM Lead");
-
-    if(result){
-        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Successful!");
+function main(string... args) {
+    log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
+    string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
+    boolean result = sendSmsToLeads(sampleQuery);
+    if (result) {
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
     } else {
-        log:printInfo("Salesforce-Twilio Integration -> SMS Sending Failed!");
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");
     }
 }
-
 ```
 
 ## Testing
@@ -248,15 +229,16 @@ You can use `Testerina` to test Ballerina implementations. Run the `sms_sender_t
 
 ```ballerina
 @test:Config
-function testSendSmsToLeads () {
-    string sampleQuery = "SELECT name, phone FROM Lead";
-
-    log:printInfo("Salesforce-Twilio Integration => sendSMS()");
-
+function testSendSmsToLeads() {
+    log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
+    string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
-        test:assertEquals(result, true, msg = "Unsuccessful!!");
+    if (result) {
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
+    } else {
+        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");
+    }
 }
-
 ```
 
 * You receive an SMS with the relevant numbers as the result.

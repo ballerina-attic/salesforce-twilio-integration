@@ -19,13 +19,13 @@ import wso2/twilio;
 import ballerina/config;
 import ballerina/log;
 
-documentation{
+documentation {
     Represents Salesforce client endpoint.
 }
 endpoint sf:Client salesforceClient {
-    baseUrl: config:getAsString(SF_URL),
-    clientConfig:{
-        auth:{
+    clientConfig: {
+        url: config:getAsString(SF_URL),
+        auth: {
             scheme: "oauth",
             accessToken: config:getAsString(SF_ACCESS_TOKEN),
             refreshToken: config:getAsString(SF_REFRESH_TOKEN),
@@ -36,71 +36,75 @@ endpoint sf:Client salesforceClient {
     }
 };
 
-documentation{
+documentation {
     Represents Twilio client endpoint.
 }
 endpoint twilio:Client twilioClient {
-    accountSid: config:getAsString(TWILIO_ACCOUNT_SID),
+    accountSId: config:getAsString(TWILIO_ACCOUNT_SID),
     authToken: config:getAsString(TWILIO_AUTH_TOKEN)
 };
 
-documentation{
-    Main function to run the integration system
+documentation {
+    Main function to run the integration system.
 }
-function main(string[] args) {
+function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
-    string sampleQuery = "SELECT name, phone FROM Lead";
+    string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
-    if(result){
+    if (result) {
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
     } else {
         log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");
     }
 }
 
-documentation { Utility function integrate Salesforce and Twilio connectors
-    P{{sfQuery}} query to be sent to Salesforce API
+documentation {
+    Utility function integrate Salesforce and Twilio connectors.
+
+    P{{sfQuery}} Query to be sent to Salesforce API
+    R{{}} State of whether the process of sending SMS to leads are success or not
 }
 function sendSmsToLeads(string sfQuery) returns boolean {
-    var leadsDataVar = getLeadsData(sfQuery);
-    match leadsDataVar {
-        map leadsDataMap =>{
-            string messageBody = config:getAsString(TWILIO_MESSAGE);
-            string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
-            foreach k, v in leadsDataMap {
-                string result = <string>v;
-                string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
-                boolean isSuccess = sendTextMessage(fromMobile, k, message);
-                if (!isSuccess) {
-                    return false;
-                }
-            }
+    (map, boolean) leadsResponse = getLeadsData(sfQuery);
+    map leadsDataMap;
+    boolean isSuccess;
+    (leadsDataMap, isSuccess) = leadsResponse;
+
+    if (isSuccess){
+        string messageBody = config:getAsString(TWILIO_MESSAGE);
+        string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
+        foreach k, v in leadsDataMap {
+            string result = <string>v;
+            string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
+            isSuccess = sendTextMessage(fromMobile, k, message);
         }
-        boolean isSuccess => return isSuccess;
     }
-    return true;
+    return isSuccess;
 }
 
-documentation { Returns a map consists of Lead's data
-    R{{}} map consists of Lead data, phone as key, name as value
+documentation {
+    Returns a map consists of Lead's data.
+
+    P{{leadQuery}} Query to retrieve all Salesforce leads
+    R{{}} Tuple of maap consists of Lead data and the indication of process is succss or not
 }
-function getLeadsData(string leadQuery) returns (map|boolean) {
+function getLeadsData(string leadQuery) returns (map, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
     map leadsMap;
-    var response = salesforceClient -> getQueryResult(leadQuery);
+    var response = salesforceClient->getQueryResult(leadQuery);
     match response {
         json jsonRes => {
             addRecordsToMap(jsonRes, leadsMap);
             while (jsonRes.nextRecordsUrl != null) {
                 log:printDebug("Found new query result set!");
                 string nextQueryUrl = jsonRes.nextRecordsUrl.toString();
-                response = salesforceClient -> getNextQueryResult(nextQueryUrl);
+                response = salesforceClient->getNextQueryResult(nextQueryUrl);
                 match response {
                     json jsonNextRes => addRecordsToMap(jsonNextRes, leadsMap);
                     sf:SalesforceConnectorError err => {
                         log:printDebug("Salesforce Connector -> Failed to get leads data");
                         log:printError(err.message);
-                        return false;
+                        return (leadsMap, false);
                     }
                 }
             }
@@ -108,15 +112,17 @@ function getLeadsData(string leadQuery) returns (map|boolean) {
         sf:SalesforceConnectorError err => {
             log:printDebug("Salesforce Connector -> Failed to get leads data");
             log:printError(err.message);
-            return false;
+            return (leadsMap, false);
         }
     }
-    return leadsMap;
+    return (leadsMap, true);
 }
 
-documentation { Utility function to add json records to map
-    P{{response}} json respones
-    P{{leadsMap}} map of leads to be added the record data
+documentation {
+    Utility function to add json records to map.
+
+    P{{response}} Json response
+    P{{leadsMap}} Map of leads to be added the record data
 }
 function addRecordsToMap(json response, map leadsMap) {
     json[] records = check <json[]>response.records;
@@ -129,13 +135,17 @@ function addRecordsToMap(json response, map leadsMap) {
     }
 }
 
-documentation { Utility function to send SMS
+documentation {
+
+    Utility function to send SMS.
+
     P{{fromMobile}} from mobile number
     P{{toMobile}} to mobile number
     P{{message}} sending message
+    R{{}} The status of sending SMS success or not
 }
 function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
-    var details = twilioClient -> sendSms(fromMobile, toMobile, message);
+    var details = twilioClient->sendSms(fromMobile, toMobile, message);
     match details {
         twilio:SmsResponse smsResponse => {
             if (smsResponse.sid != EMPTY_STRING) {

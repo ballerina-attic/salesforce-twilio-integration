@@ -18,6 +18,7 @@ import wso2/sfdc37 as sf;
 import wso2/twilio;
 import ballerina/config;
 import ballerina/log;
+import ballerina/http;
 
 documentation {
     Represents Salesforce client endpoint.
@@ -26,7 +27,7 @@ endpoint sf:Client salesforceClient {
     clientConfig: {
         url: config:getAsString(SF_URL),
         auth: {
-            scheme: "oauth",
+            scheme: http:OAUTH2,
             accessToken: config:getAsString(SF_ACCESS_TOKEN),
             refreshToken: config:getAsString(SF_REFRESH_TOKEN),
             clientId: config:getAsString(SF_CLIENT_ID),
@@ -126,10 +127,10 @@ documentation {
 }
 function addRecordsToMap(json response, map leadsMap) {
     json[] records = check <json[]>response.records;
-    foreach record in records {
-        if (record.Phone != null) {
-            string key = record.Phone.toString();
-            string value = record.Name.toString();
+    foreach rec in records {
+        if (rec.Phone != null) {
+            string key = rec.Phone.toString();
+            string value = rec.Name.toString();
             leadsMap[key] = value;
         }
     }

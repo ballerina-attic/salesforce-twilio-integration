@@ -87,7 +87,7 @@ endpoint sf:Client salesforceClient {
     clientConfig:{
         url: ""
         auth:{
-            scheme:"oauth",
+            scheme:http:OAUTH2,
             accessToken: "",
             refreshToken: "",
             clientId: "",
@@ -112,11 +112,8 @@ The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
 endpoint twilio:Client twilioClient {
-    auth:{
-        scheme:"basic",
-        username: "",
-        password: ""
-    }
+    accountSId: "",
+    authToken: ""
 };
 ```
   

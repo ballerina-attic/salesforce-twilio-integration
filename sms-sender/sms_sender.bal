@@ -78,6 +78,9 @@ function sendSmsToLeads(string sfQuery) returns boolean {
             string result = <string>v;
             string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
             isSuccess = sendTextMessage(fromMobile, k, message);
+            if (!isSuccess) {
+                break;
+            }
         }
     }
     return isSuccess;

@@ -24,4 +24,6 @@ script:
 
 - ballerina version
 
+- ballerina init
+
 - ballerina build sms-sender --skiptests

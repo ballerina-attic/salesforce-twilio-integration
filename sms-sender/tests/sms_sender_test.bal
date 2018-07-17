@@ -22,5 +22,5 @@ function testSendSmsToLeads() {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
-    test:assertTrue(result, "Promotional SMS sending process failed!");
+    test:assertTrue(result, msg = "Promotional SMS sending process failed!");
 }

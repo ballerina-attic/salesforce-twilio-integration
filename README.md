@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ballerina-guides/salesforce-twilio-integration.svg?branch=master)](https://travis-ci.org/ballerina-guides/salesforce-twilio-integration)
+
 # Salesforce-Twilio Integration
 
 [Salesforce](https://www.salesforce.com) is the world’s #1 CRM platform that employees can access entirely over the Internet. [Twilio](https://www.twilio.com/) is a cloud communications platform for building SMS, Voice, and Messaging applications on an API built for global scale. To understand how you can use Twilio for sending messages, let's consider a real-world use case of a service promotional SMS sending system to a selected group of Leads.

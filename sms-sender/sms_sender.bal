@@ -44,7 +44,7 @@ endpoint twilio:Client twilioClient {
 # Main function to run the integration system.
 #
 # + args - Runtime parameters
-function main(string... args) {
+public function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);

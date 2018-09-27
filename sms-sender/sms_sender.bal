@@ -83,7 +83,7 @@ function sendSmsToLeads(string sfQuery) returns boolean {
 # Returns a map consists of Lead's data.
 
 # + leadQuery - Query to retrieve all Salesforce leads
-# + return - Tuple of maap consists of Lead data and the indication of process is succss or not
+# + return - Tuple of map consists of Lead data and the indication of process is success or not
 function getLeadsData(string leadQuery) returns (map, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
     map leadsMap;

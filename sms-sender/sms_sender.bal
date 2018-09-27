@@ -20,9 +20,7 @@ import ballerina/config;
 import ballerina/log;
 import ballerina/http;
 
-documentation {
-    Represents Salesforce client endpoint.
-}
+# Represents Salesforce client endpoint.
 endpoint sf:Client salesforceClient {
     clientConfig: {
         url: config:getAsString(SF_URL),
@@ -37,17 +35,15 @@ endpoint sf:Client salesforceClient {
     }
 };
 
-documentation {
-    Represents Twilio client endpoint.
-}
+# Represents Twilio client endpoint.
 endpoint twilio:Client twilioClient {
     accountSId: config:getAsString(TWILIO_ACCOUNT_SID),
     authToken: config:getAsString(TWILIO_AUTH_TOKEN)
 };
 
-documentation {
-    Main function to run the integration system.
-}
+# Main function to run the integration system.
+#
+# + args - Runtime parameters
 function main(string... args) {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
@@ -59,12 +55,10 @@ function main(string... args) {
     }
 }
 
-documentation {
-    Utility function integrate Salesforce and Twilio connectors.
+# Utility function integrate Salesforce and Twilio connectors.
 
-    P{{sfQuery}} Query to be sent to Salesforce API
-    R{{}} State of whether the process of sending SMS to leads are success or not
-}
+# + sfQuery - Query to be sent to Salesforce API
+# + return - State of whether the process of sending SMS to leads are success or not
 function sendSmsToLeads(string sfQuery) returns boolean {
     (map, boolean) leadsResponse = getLeadsData(sfQuery);
     map leadsDataMap;
@@ -86,12 +80,10 @@ function sendSmsToLeads(string sfQuery) returns boolean {
     return isSuccess;
 }
 
-documentation {
-    Returns a map consists of Lead's data.
+# Returns a map consists of Lead's data.
 
-    P{{leadQuery}} Query to retrieve all Salesforce leads
-    R{{}} Tuple of maap consists of Lead data and the indication of process is succss or not
-}
+# + leadQuery - Query to retrieve all Salesforce leads
+# + return - Tuple of maap consists of Lead data and the indication of process is succss or not
 function getLeadsData(string leadQuery) returns (map, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
     map leadsMap;
@@ -122,12 +114,10 @@ function getLeadsData(string leadQuery) returns (map, boolean) {
     return (leadsMap, true);
 }
 
-documentation {
-    Utility function to add json records to map.
+# Utility function to add json records to map.
 
-    P{{response}} Json response
-    P{{leadsMap}} Map of leads to be added the record data
-}
+# + response - Json response
+# + leadsMap - Map of leads to be added the record data
 function addRecordsToMap(json response, map leadsMap) {
     json[] records = check <json[]>response.records;
     foreach rec in records {
@@ -139,15 +129,12 @@ function addRecordsToMap(json response, map leadsMap) {
     }
 }
 
-documentation {
+# Utility function to send SMS.
 
-    Utility function to send SMS.
-
-    P{{fromMobile}} from mobile number
-    P{{toMobile}} to mobile number
-    P{{message}} sending message
-    R{{}} The status of sending SMS success or not
-}
+# + fromMobile - from mobile number
+# + toMobile - to mobile number
+# + message - sending message
+# + return - The status of sending SMS success or not
 function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
     var details = twilioClient->sendSms(fromMobile, toMobile, message);
     match details {

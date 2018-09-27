@@ -27,7 +27,7 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 * JDK 1.8 or later
 * [Ballerina Distribution](https://github.com/ballerina-platform/ballerina-lang/blob/master/docs/quick-tour.md)
 * A Text Editor or an IDE
-* [Salesforce Connector](https://github.com/wso2-ballerina/package-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/package-twilio) will be downloaded from `ballerinacentral` when running the Ballerina file.
+* [Salesforce Connector](https://github.com/wso2-ballerina/package-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/package-twilio) will be downloaded from `Ballerina Central` when running the Ballerina file.
 
 ### Before you begin
 

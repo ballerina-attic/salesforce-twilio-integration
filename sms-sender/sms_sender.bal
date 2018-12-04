@@ -21,7 +21,7 @@ import ballerina/http;
 import ballerina/log;
 
 # Represents Salesforce client endpoint.
-sf:Client salesforceClient = new(config:getAsString(SF_URL), config = {
+sf:Client salesforceClient = new(config:getAsString(SF_URL), {
     clientConfig: {
         auth: {
             scheme: http:OAUTH2,

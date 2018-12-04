@@ -84,7 +84,7 @@ Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL
 `sms_sender.bal` file shows how to create the Salesforce Client endpoint.
 
 ```ballerina
-sf:Client salesforceClient = new(config:getAsString(SF_URL), config = {
+sf:Client salesforceClient = new(config:getAsString(SF_URL), {
     clientConfig: {
         auth: {
             scheme: http:OAUTH2,
@@ -111,7 +111,7 @@ Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCO
 The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
-twilio:Client twilioClient = new(config = {
+twilio:Client twilioClient = new({
     accountSId: "",
     authToken: ""
 });

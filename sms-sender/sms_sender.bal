@@ -52,7 +52,7 @@ public function main() {
     }
 }
 
-# Utility function integrate Salesforce and Twilio connectors.
+# Utility function integrate Salesforce and Twilio connectors and indicates the status of sending.
 
 # + sfQuery - Query to be sent to Salesforce API
 # + return - State of whether the process of sending SMS to leads are success or not
@@ -65,7 +65,7 @@ function sendSmsToLeads(string sfQuery) returns boolean {
     if (isSuccess){
         string messageBody = config:getAsString(TWILIO_MESSAGE);
         string fromMobile = config:getAsString(TWILIO_FROM_MOBILE);
-        foreach k, v in leadsDataMap {
+        foreach var (k, v) in leadsDataMap {
             string result = <string>v;
             string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
             isSuccess = sendTextMessage(fromMobile, k, message);
@@ -113,7 +113,7 @@ function getLeadsData(string leadQuery) returns (map<string>, boolean) {
 # + leadsMap - Map of leads to be added the record data
 function addRecordsToMap(json response, map<string> leadsMap) {
     json[] records = <json[]>response.records;
-    foreach rec in records {
+    foreach json rec in records {
         if (rec.Phone != null) {
             string key = rec.Phone.toString();
             string value = rec.Name.toString();
@@ -122,7 +122,7 @@ function addRecordsToMap(json response, map<string> leadsMap) {
     }
 }
 
-# Utility function to send SMS.
+# Utility function to send SMS and return the status of sending.
 
 # + fromMobile - from mobile number
 # + toMobile - to mobile number

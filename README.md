@@ -84,18 +84,19 @@ Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL
 `sms_sender.bal` file shows how to create the Salesforce Client endpoint.
 
 ```ballerina
-sf:Client salesforceClient = new(config:getAsString(SF_URL), {
-    clientConfig: {
-        auth: {
-            scheme: http:OAUTH2,
-            accessToken: "",
-            refreshToken: "",
-            clientId: "",
-            clientSecret: "",
-            refreshUrl: ""
+sf:Client salesforceClient = new({
+        baseUrl: config:getAsString(SF_URL),
+        clientConfig: {
+            auth: {
+                scheme: http:OAUTH2,
+                accessToken: config:getAsString(SF_ACCESS_TOKEN),
+                refreshToken: config:getAsString(SF_REFRESH_TOKEN),
+                clientId: config:getAsString(SF_CLIENT_ID),
+                clientSecret: config:getAsString(SF_CLIENT_SECRET),
+                refreshUrl: config:getAsString(SF_REFRESH_URL)
+            }
         }
-    }
-});
+    });
 ```
 
 #### Setup Twilio configurations
@@ -112,9 +113,9 @@ The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
 twilio:Client twilioClient = new({
-    accountSId: "",
-    authToken: ""
-});
+        accountSId: config:getAsString(TWILIO_ACCOUNT_SID),
+        authToken: config:getAsString(TWILIO_AUTH_TOKEN)
+    });
 ```
   
 > IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
@@ -131,22 +132,22 @@ function getLeadsData(string leadQuery) returns (map<string>, boolean) {
     map<string> leadsMap = {};
     var queryResult = salesforceClient->getQueryResult(leadQuery);
     if (queryResult is json) {
-        addRecordsToMap(response, leadsMap);
-        while (jsonRes.nextRecordsUrl != null) {
+        addRecordsToMap(queryResult, leadsMap);
+        while (queryResult.nextRecordsUrl != null) {
             log:printDebug("Found new query result set!");
-            string nextQueryUrl = jsonRes.nextRecordsUrl.toString();
+            string nextQueryUrl = queryResult.nextRecordsUrl.toString();
             var nextQueryResult = salesforceClient->getNextQueryResult(nextQueryUrl);
             if (nextQueryResult is json) {
                 addRecordsToMap(nextQueryResult, leadsMap);
             } else {
                 log:printDebug("Salesforce Connector -> Failed to get leads data");
-                log:printError(<string>nextQueryResult.detail().message);
+                log:printError(<string>nextQueryResult.message);
                 return (leadsMap, false);
             }
         }
     } else {
         log:printDebug("Salesforce Connector -> Failed to get leads data");
-        log:printError(<string>queryResult.detail().message);
+        log:printError(<string>queryResult.message);
         return (leadsMap, false);
     }
     return (leadsMap, true);

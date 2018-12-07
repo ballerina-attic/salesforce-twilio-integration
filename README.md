@@ -27,13 +27,13 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 * JDK 1.8 or later
 * [Ballerina Distribution](https://github.com/ballerina-platform/ballerina-lang/blob/master/docs/quick-tour.md)
 * A Text Editor or an IDE
-* [Salesforce Connector](https://github.com/wso2-ballerina/package-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/package-twilio) will be downloaded from `Ballerina Central` when running the Ballerina file.
+* [Salesforce Connector](https://github.com/wso2-ballerina/module-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/module-twilio) will be downloaded from `Ballerina Central` when running the Ballerina file.
 
 ### Before you begin
 
-##### Understand the package structure
+##### Understand the module structure
 
-Ballerina is a complete programming language that can have any custom project structure as you wish. Although the language allows you to have any package structure, use the following simple package structure for this project.
+Ballerina is a complete programming language that can have any custom project structure as you wish. Although the language allows you to have any module structure, use the following simple module structure for this project.
 
 ```
 salesforce-twilio-integration 
@@ -41,7 +41,7 @@ salesforce-twilio-integration
   |    └── test
   |          └── sms_sender_test
   |    └── constants.bal
-  |    └── Package.md
+  |    └── Module.md
   |    └── sms_sender.bal
   └── ballerina.conf
   └── README.md
@@ -62,7 +62,6 @@ SF_CLIENT_ID=""
 SF_CLIENT_SECRET=""
 SF_REFRESH_TOKEN=""
 SF_REFRESH_URL=""
-
 ```
 
 Let's first see how to add the Salesforce configurations and Twilio configurations for the application written in Ballerina language.
@@ -70,7 +69,7 @@ Let's first see how to add the Salesforce configurations and Twilio configuratio
 #### Setup Salesforce configurations
 Create a Salesforce account and create a connected app by visiting [Salesforce](https://www.salesforce.com). Obtain the following parameters:
 
-* Base URl (Endpoint)
+* Base URL (Endpoint)
 * Client Id
 * Client Secret
 * Access Token
@@ -85,19 +84,19 @@ Set Salesforce credentials in `ballerina.conf` (requested parameters are `SF_URL
 `sms_sender.bal` file shows how to create the Salesforce Client endpoint.
 
 ```ballerina
-endpoint sf:Client salesforceClient {
-    clientConfig:{
-        url: ""
-        auth:{
-            scheme:http:OAUTH2,
-            accessToken: "",
-            refreshToken: "",
-            clientId: "",
-            clientSecret: "",
-            refreshUrl: ""
+sf:Client salesforceClient = new({
+        baseUrl: config:getAsString(SF_URL),
+        clientConfig: {
+            auth: {
+                scheme: http:OAUTH2,
+                accessToken: config:getAsString(SF_ACCESS_TOKEN),
+                refreshToken: config:getAsString(SF_REFRESH_TOKEN),
+                clientId: config:getAsString(SF_CLIENT_ID),
+                clientSecret: config:getAsString(SF_CLIENT_SECRET),
+                refreshUrl: config:getAsString(SF_REFRESH_URL)
+            }
         }
-    }
-};
+    });
 ```
 
 #### Setup Twilio configurations
@@ -113,10 +112,10 @@ Set Twilio credentials in `ballerina.conf` (required parameters are `TWILIO_ACCO
 The `sms_sender.bal` file shows how to create the Twilio Client endpoint.
 
 ```ballerina
-endpoint twilio:Client twilioClient {
-    accountSId: "",
-    authToken: ""
-};
+twilio:Client twilioClient = new({
+        accountSId: config:getAsString(TWILIO_ACCOUNT_SID),
+        authToken: config:getAsString(TWILIO_AUTH_TOKEN)
+    });
 ```
   
 > IMPORTANT: These access tokens and refresh tokens can be used to make API requests on your own account's behalf. Do not share these credentials.
@@ -128,32 +127,28 @@ You can use SOQL queries to get SObject data. In this example a `SELECT` query i
 The `getLeadsData()` function takes a query string as the parameter and returns a map that consists of Leads' phone number as the key and name as the value.
 
 ```ballerina
-function getLeadsData(string leadQuery) returns (map, boolean) {
+function getLeadsData(string leadQuery) returns (map<string>, boolean) {
     log:printDebug("Salesforce Connector -> Getting query results");
-    map leadsMap;
-    var response = salesforceClient->getQueryResult(leadQuery);
-    match response {
-        json jsonRes => {
-            addRecordsToMap(jsonRes, leadsMap);
-            while (jsonRes.nextRecordsUrl != null) {
-                log:printDebug("Found new query result set!");
-                string nextQueryUrl = jsonRes.nextRecordsUrl.toString();
-                response = salesforceClient->getNextQueryResult(nextQueryUrl);
-                match response {
-                    json jsonNextRes => addRecordsToMap(jsonNextRes, leadsMap);
-                    sf:SalesforceConnectorError err => {
-                        log:printDebug("Salesforce Connector -> Failed to get leads data");
-                        log:printError(err.message);
-                        return (leadsMap, false);
-                    }
-                }
+    map<string> leadsMap = {};
+    var queryResult = salesforceClient->getQueryResult(leadQuery);
+    if (queryResult is json) {
+        addRecordsToMap(queryResult, leadsMap);
+        while (queryResult.nextRecordsUrl != null) {
+            log:printDebug("Found new query result set!");
+            string nextQueryUrl = queryResult.nextRecordsUrl.toString();
+            var nextQueryResult = salesforceClient->getNextQueryResult(nextQueryUrl);
+            if (nextQueryResult is json) {
+                addRecordsToMap(nextQueryResult, leadsMap);
+            } else {
+                log:printDebug("Salesforce Connector -> Failed to get leads data");
+                log:printError(<string>nextQueryResult.message);
+                return (leadsMap, false);
             }
         }
-        sf:SalesforceConnectorError err => {
-            log:printDebug("Salesforce Connector -> Failed to get leads data");
-            log:printError(err.message);
-            return (leadsMap, false);
-        }
+    } else {
+        log:printDebug("Salesforce Connector -> Failed to get leads data");
+        log:printError(<string>queryResult.message);
+        return (leadsMap, false);
     }
     return (leadsMap, true);
 }
@@ -166,18 +161,15 @@ or the result is an error, function returns `false`.
 
 ```ballerina
 function sendTextMessage(string fromMobile, string toMobile, string message) returns boolean {
-    var details = twilioClient->sendSms(fromMobile, toMobile, message);
-    match details {
-        twilio:SmsResponse smsResponse => {
-            if (smsResponse.sid != EMPTY_STRING) {
-                log:printDebug("Twilio Connector -> SMS successfully sent to " + toMobile);
-                return true;
-            }
+    var response = twilioClient->sendSms(fromMobile, toMobile, message);
+    if (response is twilio:SmsResponse) {
+        if (response.sid != EMPTY_STRING) {
+            log:printDebug("Twilio Connector -> SMS successfully sent to " + toMobile);
+            return true;
         }
-        twilio:TwilioError err => {
-            log:printDebug("Twilio Connector -> SMS failed sent to " + toMobile);
-            log:printError(err.message);
-        }
+    } else {
+        log:printDebug("Twilio Connector -> SMS failed sent to " + toMobile);
+        log:printError(<string>response.detail().message);
     }
     return false;
 }
@@ -186,8 +178,8 @@ Inside the `sendSmsToLeads()` function, it takes the Lead's data by calling the 
 
 ```ballerina
 function sendSmsToLeads(string sfQuery) returns boolean {
-    (map, boolean) leadsResponse = getLeadsData(sfQuery);
-    map leadsDataMap;
+    (map<string>, boolean) leadsResponse = getLeadsData(sfQuery);
+    map<string> leadsDataMap;
     boolean isSuccess;
     (leadsDataMap, isSuccess) = leadsResponse;
 
@@ -198,6 +190,9 @@ function sendSmsToLeads(string sfQuery) returns boolean {
             string result = <string>v;
             string message = "Hi " + result + NEW_LINE_CHARACTER + messageBody;
             isSuccess = sendTextMessage(fromMobile, k, message);
+            if (!isSuccess) {
+                break;
+            }
         }
     }
     return isSuccess;
@@ -210,7 +205,7 @@ Result status can be checked with the `boolean` value.
 Inside the main function, it calls the `sendSmsToLeads()` function by passing the requested query. The result status can be checked with the `boolean` value.
 
 ```ballerina
-function main(string... args) {
+public function main() {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
@@ -224,7 +219,7 @@ function main(string... args) {
 
 ## Testing
 
-You can use `Testerina` to test Ballerina implementations. Run the `sms_sender_test.bal` file using the `ballerina run sms-sender` command to execute the test function.
+You can use `Testerina` to test Ballerina implementations. Run the `sms_sender_test.bal` file using the `ballerina test sms-sender` command to execute the test function.
 
 ```ballerina
 @test:Config
@@ -232,11 +227,7 @@ function testSendSmsToLeads() {
     log:printDebug("Salesforce-Twilio Integration -> Sending promotional SMS to leads of Salesforce");
     string sampleQuery = "SELECT Name, Phone, Country FROM Lead WHERE Country = 'LK'";
     boolean result = sendSmsToLeads(sampleQuery);
-    if (result) {
-        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process successfully completed!");
-    } else {
-        log:printDebug("Salesforce-Twilio Integration -> Promotional SMS sending process failed!");
-    }
+    test:assertTrue(result, msg = "Promotional SMS sending process failed!");
 }
 ```
 
@@ -244,7 +235,7 @@ function testSendSmsToLeads() {
 
 #### Sample Result SMS
 ```
-Hi Carmen
+Hi Carmen,
 
 Enjoy discounts up to 25% by downloading our new Cloud Platform before 31st May'18! T&C Apply.
 ```

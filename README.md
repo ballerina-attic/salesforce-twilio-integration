@@ -31,7 +31,7 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 
 ### Optional requirements
 
-- Ballerina IDE plugins ([IntelliJ IDEA](https://plugins.jetbrains.com/plugin/9520-ballerina), [VSCode](https://marketplace.visualstudio.com/items?itemName=ballerina.ballerina))
+- Ballerina IDE plugins ([VSCode](https://marketplace.visualstudio.com/items?itemName=ballerina.ballerina), [IntelliJ IDEA](https://plugins.jetbrains.com/plugin/9520-ballerina))
 
 ### Before you begin
 

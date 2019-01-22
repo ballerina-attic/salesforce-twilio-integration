@@ -26,7 +26,7 @@ You can use Ballerina Salesforce connector to get the interested leads with thei
 
 - [Ballerina Distribution](https://ballerina.io/learn/getting-started/)
 - A Text Editor or an IDE 
-> **Tip**: You can install the following Ballerina IDE plugins: [VSCode](https://marketplace.visualstudio.com/items?itemName=ballerina.ballerina), [IntelliJ IDEA](https://plugins.jetbrains.com/plugin/9520-ballerina)
+> **Tip**: For a better development experience, install one of the following Ballerina IDE plugins: [VSCode](https://marketplace.visualstudio.com/items?itemName=ballerina.ballerina), [IntelliJ IDEA](https://plugins.jetbrains.com/plugin/9520-ballerina)
 - [Salesforce Connector](https://github.com/wso2-ballerina/module-salesforce) and the [Twilio Connector](https://github.com/wso2-ballerina/module-twilio) will be downloaded from `Ballerina Central` when running the Ballerina file.
 
 ### Before you begin

@@ -26,11 +26,18 @@ sf:Client salesforceClient = new({
         clientConfig: {
             auth: {
                 scheme: http:OAUTH2,
-                accessToken: config:getAsString(SF_ACCESS_TOKEN),
-                refreshToken: config:getAsString(SF_REFRESH_TOKEN),
-                clientId: config:getAsString(SF_CLIENT_ID),
-                clientSecret: config:getAsString(SF_CLIENT_SECRET),
-                refreshUrl: config:getAsString(SF_REFRESH_URL)
+                config: {
+                    grantType: http:DIRECT_TOKEN,
+                    config: {
+                        accessToken: config:getAsString(SF_ACCESS_TOKEN),
+                        refreshConfig: {
+                            refreshUrl: config:getAsString(SF_REFRESH_URL),
+                            refreshToken: config:getAsString(SF_REFRESH_TOKEN),
+                            clientId: config:getAsString(SF_CLIENT_ID),
+                            clientSecret: config:getAsString(SF_CLIENT_SECRET)
+                        }
+                    }
+                }
             }
         }
     });
